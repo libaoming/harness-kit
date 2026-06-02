@@ -1,0 +1,41 @@
+{
+  "$schema_version": "0.1",
+  "milestone": "M1",
+  "project": "demo-cli",
+  "updated": "2026-06-02",
+  "owner": "your-name",
+  "convention": {
+    "status": ["pending", "in_progress", "failing", "passing"],
+    "default_status": "failing",
+    "rule": "verify 必须真正通过才能改 passing；单测通过只到 in_progress",
+    "verifier_gate": "verify 字段为空 = 不准开工（不能离开 pending）。每个目标必须带可衡量的成功信号——没有验证机制的目标只是许愿。",
+    "context_fields": "每个 feature 必须填 related/affected/out_of_scope，让 subagent 秒判'读哪些、不读哪些'"
+  },
+  "slices": {
+    "S1": {"name": "核心：Markdown → PDF 转换链路", "exit_criteria": "给定 .md 文件能产出 PDF，且 fixtures/sample.md 转换测试通过", "git_tag": "demo-cli-s1"}
+  },
+  "features": [
+    {
+      "id": "F01_parse_md",
+      "slice": "S1",
+      "status": "passing",
+      "verify": {"type": "fixture", "path": "fixtures/sample.md", "desc": "解析含标题/列表/代码块/链接的样本，AST 节点数与基准一致"},
+      "verify_notes": "2026-06-02 test_parser.py 8/8 通过",
+      "related": {"specs": ["SPEC.md#解析"], "code": ["demo_cli/parser.py"], "docs": []},
+      "affected": "Markdown 文本 → 结构化 AST",
+      "out_of_scope": "PDF 排版（属 F02）",
+      "blocking": []
+    },
+    {
+      "id": "F02_render_pdf",
+      "slice": "S1",
+      "status": "in_progress",
+      "verify": {"type": "fixture", "path": "fixtures/sample.md", "desc": "sample.md 转出的 PDF 页数与基准一致、无报错、首页含标题"},
+      "verify_notes": "渲染器接好，分页规则待核对真实样本",
+      "related": {"specs": ["SPEC.md#排版"], "code": ["demo_cli/renderer.py"], "docs": []},
+      "affected": "AST → PDF 文件",
+      "out_of_scope": "自定义主题 / 字体（M2 再做）",
+      "blocking": []
+    }
+  ]
+}
