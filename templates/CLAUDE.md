@@ -18,6 +18,7 @@
   STATUS.md              新 session 入口（L1）
   PRD.md / SPEC.md / architecture.md   文档先行三件套（L2 输入源）
   features.json          原子 feature 单一事实源（L2）
+  CONTEXT.md             上下文构成审计（CE 产物，LLM 项目才有 → context-engineering-kit）
   {{MILESTONE}}/         里程碑三件套（init.sh / AGENTS.md / PROGRESS.md）
   fixtures/              fixture（先于代码，含 README 索引）
   .claude/agents/        项目专属子 agent（L4 脏活隔离）
@@ -57,6 +58,14 @@
 3. **改动只在本地**：不擅自 `git push` / `pull` / 重启线上 / 改生产配置；部署是用户显式触发的独立动作
 
 ---
+
+## 上下文工程纪律（LLM 项目）
+
+若本项目调用 LLM（agent / chat / 工作流），`CONTEXT.md` 是 harness 四件套的第四件（`features.json` + 三件套 + **CONTEXT.md**）：
+- **开工前**：写第一行 LLM 调用代码前先画 `CONTEXT.md`（7 层上下文构成 + 暗物质审计）
+- **改动前**：改任何 system prompt / 上下文拼装代码前先读 CONTEXT.md
+- **改动后**：回填 CONTEXT.md，防文档腐烂
+- 模板与方法 → [context-engineering-kit](https://github.com/libaoming/context-engineering-kit)
 
 ## verify 纪律
 - **开工闸门**：`verify` 字段为空的 feature 不准动（停在 pending），先定义可衡量的成功信号再开工
