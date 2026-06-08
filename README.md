@@ -136,6 +136,15 @@ harness-kit/
 - Anthropic — *Effective Harnesses for Long-Running Agents*
 - 方法论叙述版见公众号「橙研所 · 方法论」：《大家都在喊 harness，但没人告诉你怎么搭》
 
+## 配套 kit · harness 三件套
+
+harness-kit 管「开发时」骨架（L1-L4：进度 / 单一事实源 / 上下文隔离 / 自动化）。另有两个独立 kit 覆盖另两个维度，由 `harness-init` skill 在建项目时**按需挂载**，保持核心轻量：
+
+- **[agent-memory-kit](https://github.com/libaoming/agent-memory-kit)** — 运行时记忆层（记忆四角色：检索注入 + 闭环优化）。构建「带记忆的产品 agent」时挂。
+- **[context-engineering-kit](https://github.com/libaoming/context-engineering-kit)** — CONTEXT.md 7 层上下文构成审计。做 context 工程时挂。
+
+> 一句话分工：**context-kit** 决定喂什么进上下文，**harness-kit** 管开发骨架与接力，**memory-kit** 让 agent 跑起来后记住经验。三者正交，可单用可合用。
+
 ## License
 
 [MIT](LICENSE) © baomingli（橙研所）
