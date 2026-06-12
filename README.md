@@ -96,6 +96,7 @@ harness-kit/
 │   ├── M1_PROGRESS.md         # L2：里程碑进度 + 增量流水
 │   ├── fixtures_README.md     # L2：fixture 索引
 │   ├── agent_ops.md           # L4：项目专属只读运维子 agent
+│   ├── BOARD.md               # 可选：多 agent 并行状态板（认领表+merge gate）
 │   ├── settings.local.json    # L3：Stop hook 配置（增量流水追加）
 │   └── hooks/
 │       └── stop-progress-append.sh   # L3：每轮把请求增量落盘的 hook（纯文本、不调 LLM）
@@ -103,6 +104,7 @@ harness-kit/
 │   └── demo-cli/              # 一个填好占位符的最小示例
 └── docs/
     ├── methodology.md         # 四层防御体系详解
+    ├── parallel-agents.md     # 可选：多 agent 并行编排层（星型并行 + merge gate）
     └── with-claude-code.md    # 怎么把它接成 Claude Code 的一键 skill
 ```
 
