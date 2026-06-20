@@ -1,80 +1,82 @@
-# 四层防御体系详解
+> 🌏 **English** | [中文](methodology.zh-CN.md)
 
-harness 的本质，是把原本「靠人记得、靠模型记得」的东西，逐个换成「靠文件锁定、靠脚本强制」。下面四层，每一层都是这同一个动作在不同维度的落地。
+# The four-layer defense system in detail
 
----
-
-## L1 持久化层
-
-**问题**：LLM 每开一个新会话都是彻底失忆的，人隔一周回来也差不多。项目的业务语义、规则、进度，如果只活在对话里，一旦会话结束就蒸发。
-
-**做法**：把这些迁到确定性文件。
-
-- `CLAUDE.md` —— 项目是什么、技术栈、目录结构、铁律、常用命令。最稳定、最不常变的「入会须知」。
-- `STATUS.md` —— **三件套的灵魂**，也是最多人漏掉的一个。两段最重要：
-  - 一句话状态：今天项目处在什么阶段。
-  - **下次入口**：精确到「先读哪个文件、再跑哪条命令、接着做哪件事」的接班指引。
-- Auto Memory（如果你的工具支持）—— 跨会话的长期偏好与事实。
-
-**验收**：让一个完全没碰过这项目的人（或一个新会话）只读这些文件，问他「现在该干什么」。答得上来才算合格。
+The essence of a harness is to take everything that used to "rely on humans remembering, rely on the model remembering" and swap it, piece by piece, for "locked into files, enforced by scripts." The four layers below are each that same move applied along a different dimension.
 
 ---
 
-## L2 方法论层（开发纪律）
+## L1 Persistence layer
 
-**问题**：「端到端跑通了」是个聚合指标，永远「快了快了」，你永远不知道具体哪一块真的焊死了。
+**The problem**: every new session, the LLM is completely amnesiac — and a human coming back after a week isn't much better. A project's business semantics, rules, and progress, if they live only in the conversation, evaporate the moment the session ends.
 
-**做法**：
+**The approach**: move them into deterministic files.
 
-- **单一事实源 `features.json`**：每个原子功能记 `id / slice / status / verify`。
-  - status 四态 `pending → in_progress → failing → passing`。
-  - **默认 failing，verify 真跑通才能改 passing**。单测过只到 `in_progress`，真实端到端 verify 过才 `passing`。
-- 🚦 **verifier 硬闸门**：`verify` 字段为空 = **不准开工**（不能离开 pending）。每个目标必须带可衡量的成功信号（fixture / 测试 / 基准 / 可复现 bug / E2E）——没有验证机制的目标只是许愿。
-- 🧭 **三段式关联**：每个 feature 填 `related / affected / out_of_scope`，让子 agent 秒判「读哪些、不读哪些」，对治 context 膨胀；`out_of_scope` 同时防 AI 联调时复刻隐性功能。
-- **线性切片**：把功能排成有先后、各有 `exit_criteria` + `git_tag` 的几个阶段，完成一个才进下一个。
-- **fixture 先于代码**：verify 引用的 fixture 不存在就先造，不许 mock、不许「等真数据」。设计「一份 fixture 养多条功能」的复用结构。
-- 里程碑三件套放 `M1/` 子目录（`init.sh / AGENTS.md / PROGRESS.md`），不放根目录。
+- `CLAUDE.md` — what the project is, the tech stack, the directory structure, the ground rules, the common commands. The most stable, least-changing "onboarding notice."
+- `STATUS.md` — **the soul of the trio**, and the one most people skip. Two parts matter most:
+  - One-line status: what stage the project is at today.
+  - **Next entry point**: a hand-off guide precise down to "which file to read first, which command to run next, which task to do after that."
+- Auto Memory (if your tooling supports it) — long-term preferences and facts that persist across sessions.
 
----
-
-## L3 自动化钩子层
-
-**问题**：该每轮做的机械活（校验、记录进度、跑冒烟），靠提示词要求模型做，它会忘；靠人记得，隔天接班就忘了。
-
-**做法**：确定性自动化放项目级 `.claude/settings.local.json`（local 不入 git）。
-
-本仓库内置一个 **Stop hook**（`hooks/stop-progress-append.sh`）：每轮回答后，把「用户这轮的请求」纯文本增量追加到 `M1/PROGRESS.md` 的「增量流水」区——不调 LLM、扛关电脑，崩溃最多丢正在进行的一轮。新会话启动时先把增量流水合并进正式 Session Log 再开工。
-
-其它按需加：会话启动注入、产物同步、提交前校验。原则不变——**能用确定性脚本做的，就别浪费模型（和人）的注意力。**
+**Acceptance**: hand these files to someone who has never touched the project (or a fresh session) and ask them "what should I do now?" If they can answer, it passes.
 
 ---
 
-## L4 上下文隔离层 ⭐
+## L2 Methodology layer (development discipline)
 
-**问题**：模型的上下文窗口是它的工作台，台面就那么大，堆满了就变慢、变笨。吃大量原始数据的脏活会迅速把它撑爆。
+**The problem**: "end-to-end is working" is an aggregate metric — it's forever "almost there," and you never know which specific piece is actually welded shut.
 
-**做法**：把「吃 context 的脏活」派给子 agent 在独立 context 跑完，**只回结论**；主 context 保持干净，专注改代码决策 + 跟用户对话。
+**The approach**:
 
-**必须隔离的脏活**（派子 agent，prompt 完全自包含）：
-
-- 大文档检索：PRD / SPEC / 大 features.json / 长日志 → 子 agent 读完只回「相关切片 / 答案」，主 context 绝不整文件读。
-- 远程 / 生产状态核查：日志、`systemctl`、容器日志（动辄上千行）→ 子 agent 只回结论。
-- 大数据 / transcript 分析 → 只回诊断结论。
-
-**留主线（不外包）**：改代码、架构决策、跟用户对话、verify 判定。
-
-**🚨 子 agent 铁律**：
-
-1. prompt **完全自包含**——写死路径、命令、远程 alias（子 agent 冷启动看不到主对话）。
-2. **远程 / 生产只读**——对线上只允许 `systemctl is-active` / `journalctl` / `docker logs` / `grep` / `cat` 这类只读命令。
-3. **改动只在本地**——不擅自 `git push` / `pull` / 重启线上 / 改生产配置；部署是用户显式触发的独立动作。
+- **Single source of truth `features.json`**: every atomic feature records `id / slice / status / verify`.
+  - Four status states: `pending → in_progress → failing → passing`.
+  - **Default is failing; only a real passing verify flips it to passing.** A passing unit test only gets you to `in_progress`; only a real end-to-end verify earns `passing`.
+- 🚦 **Verifier hard gate**: an empty `verify` field = **no work allowed to start** (it can't leave pending). Every goal must carry a measurable success signal (fixture / test / benchmark / reproducible bug / E2E) — a goal with no verification mechanism is just a wish.
+- 🧭 **Three-part linking**: every feature fills in `related / affected / out_of_scope`, so a subagent can instantly judge "which to read, which to skip," curbing context bloat; `out_of_scope` also stops the AI from re-implementing implicit features during integration.
+- **Linear slices**: arrange features into a few ordered stages, each with its own `exit_criteria` + `git_tag`; finish one before entering the next.
+- **Fixtures before code**: if the fixture referenced by a verify doesn't exist, build it first — no mocks, no "wait for real data." Design a "one fixture feeds many features" reuse structure.
+- Put the milestone trio in the `M1/` subdirectory (`init.sh / AGENTS.md / PROGRESS.md`), not the repo root.
 
 ---
 
-## 一句话收口
+## L3 Automation-hook layer
 
-四层加起来，就是同一个判断的反复应用：
+**The problem**: the mechanical chores that should run every turn (validation, recording progress, running smoke tests) — ask the model to do them via a prompt and it forgets; rely on a human to remember and the next day's hand-off forgets too.
 
-> 这件事，我现在是靠记得，还是靠文件和脚本？
+**The approach**: put deterministic automation in the project-level `.claude/settings.local.json` (local, not committed to git).
 
-每次答案是「靠记得」的地方，就是你的 harness 还缺的一块。
+This repo ships a built-in **Stop hook** (`hooks/stop-progress-append.sh`): after every turn, it appends "this turn's user request" as plain text to the "incremental log" section of `M1/PROGRESS.md` — no LLM call, survives a power-off, and a crash loses at most the one turn in progress. When a new session starts, merge the incremental log into the formal Session Log before getting to work.
+
+Add others as needed: session-startup injection, artifact sync, pre-commit validation. The principle doesn't change — **anything a deterministic script can do, don't waste the model's (or the human's) attention on.**
+
+---
+
+## L4 Context-isolation layer ⭐
+
+**The problem**: the model's context window is its workbench, and the bench is only so big — pile it full and it gets slow and dumb. Grunt work that chews through large amounts of raw data fills it up fast.
+
+**The approach**: hand the "context-chewing grunt work" to a subagent to run to completion in its own context, and **return only the conclusion**; keep the main context clean and focused on code-change decisions + talking to the user.
+
+**Grunt work that must be isolated** (hand to a subagent, with a fully self-contained prompt):
+
+- Large-document retrieval: PRD / SPEC / a big features.json / long logs → the subagent reads them and returns only "the relevant slice / the answer"; the main context never reads a whole file.
+- Remote / production status checks: logs, `systemctl`, container logs (easily thousands of lines) → the subagent returns only the conclusion.
+- Large-data / transcript analysis → return only the diagnostic conclusion.
+
+**Keep on the main thread (do not outsource)**: writing code, architecture decisions, talking to the user, verify judgments.
+
+**🚨 Subagent ground rules**:
+
+1. The prompt is **fully self-contained** — hardcode paths, commands, remote aliases (a subagent cold-starts and can't see the main conversation).
+2. **Remote / production is read-only** — against anything live, only read-only commands like `systemctl is-active` / `journalctl` / `docker logs` / `grep` / `cat` are allowed.
+3. **Changes stay local** — no unauthorized `git push` / `pull` / restarting production / editing production config; deployment is a separate action the user explicitly triggers.
+
+---
+
+## Wrapping it up in one line
+
+Add the four layers together and they're the same judgment applied over and over:
+
+> For this thing — am I relying on remembering, or on files and scripts?
+
+Every place where the answer is "on remembering" is a piece your harness is still missing.

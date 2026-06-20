@@ -1,48 +1,50 @@
-# 配合 Claude Code 自动化
+> 🌏 **English** | [中文](with-claude-code.zh-CN.md)
 
-`templates/` 可以手动复制使用，也可以包装成一个 **Claude Code skill**，让 agent 一句话就自动 scaffold 全套骨架、填好占位符、并按「文档先行」引导你。
+# Automating with Claude Code
 
-## 思路
+`templates/` can be copied by hand, or wrapped into a **Claude Code skill** so that a single sentence has the agent auto-scaffold the whole skeleton, fill in the placeholders, and guide you through "docs first."
 
-把这套脚手架做成一个初始化 skill（例如 `harness-init`），作为项目初始化的唯一入口——无论空目录新建，还是给已有代码库补 harness，都走它。
+## The idea
 
-核心流程三步：
+Turn this scaffold into an initialization skill (e.g. `harness-init`) that serves as the single entry point for project initialization — whether you're starting fresh in an empty directory or retrofitting a harness onto an existing codebase, it all goes through this.
 
-### 第 0 步 · 探测目录 + 收集信息
+The core flow has three steps:
 
-- **空目录 / 不存在** → 走「全新 scaffold」：直接复制模板。
-- **已有代码** → 走「纳管」：先做 `/init` 式扫描（读结构、入口、依赖、命令，理解仓库是什么），把扫描结果**填进** `CLAUDE.md` 对应位置，而不是留空壳；已存在的文件先确认再合并，绝不静默覆盖。
+### Step 0 · Probe the directory + collect info
 
-收集：项目名（kebab-case）、一句话定位、目标目录、首个里程碑名、是否要项目专属运维子 agent。
+- **Empty / nonexistent directory** → take the "fresh scaffold" path: just copy the templates.
+- **Existing code** → take the "retrofit" path: first do a `/init`-style scan (read the structure, entry points, dependencies, commands to understand what the repo is), and **fill that scan into** the right places in `CLAUDE.md` rather than leaving an empty shell; for files that already exist, confirm before merging — never silently overwrite.
 
-### 第 1 步 · scaffold 机械文件
+Collect: project name (kebab-case), one-line positioning, target directory, first milestone name, whether to include a project-specific ops subagent.
 
-按下表把模板写入目标目录（复制 → 替换占位符 `{{PROJECT}} {{POSITIONING}} {{DATE}} {{MILESTONE}} {{OWNER}}` → 写文件）：
+### Step 1 · Scaffold the mechanical files
 
-| 模板 | 目标 |
+Write the templates into the target directory per the table below (copy → replace placeholders `{{PROJECT}} {{POSITIONING}} {{DATE}} {{MILESTONE}} {{OWNER}}` → write file):
+
+| Template | Target |
 |---|---|
 | `templates/CLAUDE.md` | `CLAUDE.md` |
 | `templates/STATUS.md` | `STATUS.md` |
 | `templates/features.json` | `features.json` |
-| `templates/M1_init.sh` | `{MILESTONE}/init.sh`（`chmod +x`） |
+| `templates/M1_init.sh` | `{MILESTONE}/init.sh` (`chmod +x`) |
 | `templates/M1_AGENTS.md` | `{MILESTONE}/AGENTS.md` |
 | `templates/M1_PROGRESS.md` | `{MILESTONE}/PROGRESS.md` |
 | `templates/fixtures_README.md` | `fixtures/README.md` |
-| `templates/agent_ops.md` | `.claude/agents/{PROJECT}-ops.md`（选要才建） |
+| `templates/agent_ops.md` | `.claude/agents/{PROJECT}-ops.md` (only if requested) |
 | `templates/settings.local.json` | `.claude/settings.local.json` |
-| `templates/hooks/stop-progress-append.sh` | `.claude/hooks/stop-progress-append.sh`（`chmod +x`） |
+| `templates/hooks/stop-progress-append.sh` | `.claude/hooks/stop-progress-append.sh` (`chmod +x`) |
 
-### 第 2 步 · 创建文档桩
+### Step 2 · Create the doc stubs
 
-`PRD / SPEC / architecture` 是项目专属、必须文档先行的，只创建带章节标题的桩（`templates/*_stub.md`），正文留 `> [!TODO]`，提醒先讨论再写。
+`PRD / SPEC / architecture` are project-specific and must be written docs-first, so only create stubs with section headings (`templates/*_stub.md`), leaving the body as `> [!TODO]` to remind you to discuss before writing.
 
-### 第 3 步 · 报告 + 引导文档先行
+### Step 3 · Report + guide docs-first
 
-输出文件树，并**明确告知：代码还不能开始写**——L2 要求 PRD/SPEC/architecture 文档先行写完才动代码。
+Print the file tree, and **state clearly: code cannot start yet** — L2 requires PRD/SPEC/architecture to be written docs-first before any code is touched.
 
-## 注意
+## Notes
 
-- 目标目录已有同名文件，**先确认再覆盖**。
-- 运维子 agent 默认对远程 / 生产**只读**；项目无远程部署可删掉对应段。
-- 不替用户 `git init` / `git push`，除非用户明确要求。
-- scaffold 后不要急着写代码——「文档先行」是硬规矩。
+- If a file of the same name already exists in the target directory, **confirm before overwriting**.
+- The ops subagent defaults to **read-only** against remote / production; if the project has no remote deployment, delete the corresponding section.
+- Don't `git init` / `git push` on the user's behalf unless the user explicitly asks.
+- After scaffolding, don't rush into writing code — "docs first" is a hard rule.
