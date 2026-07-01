@@ -40,7 +40,11 @@
 - 三件套放 `{{MILESTONE}}/` 子目录，不放根目录
 
 ### L3 自动化钩子层
-确定性自动化放项目级 `.claude/settings.local.json`（local 不入 git）。**已内置**：Stop hook（每轮把用户请求增量追加到 `{{MILESTONE}}/PROGRESS.md` 的「增量流水」区，扛关电脑、不调 LLM）。其它按需加（session 启动注入 / 产物同步 / 提交前校验）。
+确定性自动化放项目级 `.claude/settings.local.json`（local 不入 git）。**已内置一对 Stop hook**：
+- `stop-progress-append.sh`（异步）——每轮把用户请求增量追加到 `{{MILESTONE}}/PROGRESS.md` 的「增量流水」区，扛关电脑、不调 LLM。
+- `stop-verify-claims.py`（同步）——**防造假收口闸**：末轮出现「已写/已落盘/File created + 文件名」或交付表 `path`（N 行）时逐一 `test -f`，有声称却磁盘不存在的文件就 exit 2 拒绝收口、把缺失清单喂回强制真核验。把 CLAUDE.md 的软规则「完成声明前先回读」在 Stop 边界机器化（缺 python3 自动降级 no-op，fail-open）。
+
+其它按需加（session 启动注入 / 产物同步 / 提交前校验）。
 
 ### L4 上下文隔离层 ⭐
 把"吃大量 context 的脏活"派给子 agent（**Agent 工具, `subagent_type=general-purpose`** 或下方项目专属子 agent）在独立 context 跑完，**只回结论**；主 context 保持干净，专注改代码决策 + 跟用户对话。

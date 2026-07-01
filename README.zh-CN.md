@@ -98,9 +98,10 @@ harness-kit/
 │   ├── M1_PROGRESS.md         # L2：里程碑进度 + 增量流水
 │   ├── fixtures_README.md     # L2：fixture 索引
 │   ├── agent_ops.md           # L4：项目专属只读运维子 agent
-│   ├── settings.local.json    # L3：Stop hook 配置（增量流水追加）
+│   ├── settings.local.json    # L3：Stop hook 配置（注册下面这对 hook）
 │   └── hooks/
-│       └── stop-progress-append.sh   # L3：每轮把请求增量落盘的 hook（纯文本、不调 LLM）
+│       ├── stop-progress-append.sh   # L3：每轮把请求增量落盘（纯文本、不调 LLM）
+│       └── stop-verify-claims.py     # L3：防造假收口闸 — 收口时对每个「已建 X」声明 test -f，缺失则 exit 2
 ├── examples/
 │   └── demo-cli/              # 一个填好占位符的最小示例
 └── docs/

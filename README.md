@@ -98,9 +98,10 @@ harness-kit/
 │   ├── M1_PROGRESS.md         # L2: milestone progress + incremental log
 │   ├── fixtures_README.md     # L2: fixture index
 │   ├── agent_ops.md           # L4: project-specific read-only ops subagent
-│   ├── settings.local.json    # L3: Stop hook config (appends to the incremental log)
+│   ├── settings.local.json    # L3: Stop hook config (registers the pair below)
 │   └── hooks/
-│       └── stop-progress-append.sh   # L3: hook that persists each turn's request increment (plain text, no LLM call)
+│       ├── stop-progress-append.sh   # L3: persists each turn's request increment (plain text, no LLM call)
+│       └── stop-verify-claims.py     # L3: anti-fabrication close-out gate — test -f every "created X" claim at Stop, exit 2 if missing
 ├── examples/
 │   └── demo-cli/              # A minimal example with placeholders filled in
 └── docs/
