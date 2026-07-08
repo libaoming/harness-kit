@@ -11,6 +11,8 @@
 
 > 🤖 **增量流水合并（每次启动先做）**：若 `{{MILESTONE}}/PROGRESS.md` 有「🤖 增量流水（待整理）」块（Stop hook 每轮自动追加的原始请求），**先合并进正式 Session Log、清空该块，再开工**。
 
+> 🧹 **本文件当代码对待（Anthropic best-practices）**：Claude 做错一次的事就写进来；定期 prune——每行自问「删掉会让 Claude 犯错吗」，不会就删（规则被噪声淹没=没有规则）；每条约束都是对模型当前能力的临时假设，模型升级后主动做减法。
+
 ## 仓库结构
 ```
 {{PROJECT}}/
@@ -33,6 +35,7 @@
 
 ### L2 方法论层（开发纪律）
 - `features.json` 是**单一事实源**：status ∈ {pending, in_progress, failing, passing}，**verify 真跑通才能改 passing**
+- 📐 **技术方案先于开发（人工评估闸）**：开发任一 feature/功能前先写技术方案（问题定位 / 机制 / 选型权衡 / 实现路径 / 守约 / verify 口径 + 待定决策点），落 `docs/proposals/`（待评估），**交用户评估通过才进开发**。区别于下条 verifier 硬闸门（机器可验证）——这是**人工设计评审闸**，挡"方案没想清就开撸"；通过后转 ADR → 进切片
 - 🚦 **verifier 硬闸门**：feature 的 `verify` 字段为空 = **不准开工**（不能离开 pending）。每个目标必须带可衡量的成功信号——"没有验证机制的目标只是许愿"
 - 🧭 **三段式关联**：每个 feature 必须填 `related`/`affected`/`out_of_scope`，让 subagent 秒判"读哪些、不读哪些"，对治 context 膨胀（OpenSpec Related Context 实践）。`out_of_scope` 同时防 AI 联调复刻隐性功能
 - **线性切片**推进：每切片有 exit_criteria + git_tag，完成才进下一个
