@@ -23,6 +23,9 @@ MP_REPO="$HOME/.claude/plugins/marketplaces/libaoming"
 MP="$MP_REPO/plugins/harness-kit/skills/harness-init/templates"
 PLUGIN_JSON="$MP_REPO/plugins/harness-kit/.claude-plugin/plugin.json"
 SKILL_MD="$MP_REPO/plugins/harness-kit/skills/harness-init/SKILL.md"
+# commit 署名:默认不写死任何模型名(写死会随模型换代过期、和手动 commit 不一致)
+# 要署名就调用时给:CO_AUTHOR="Claude Opus 4.8 <noreply@anthropic.com>" scripts/release.sh "..."
+CO_AUTHOR="${CO_AUTHOR:-}"
 
 abort() { echo "ABORT-$1" >&2; exit 1; }
 
@@ -90,7 +93,11 @@ cd "$SRC_REPO"
 OTHER_DIRTY=$(git status --porcelain | grep -v ' templates/' || true)
 if [ -n "$(git status --porcelain -- templates/)" ]; then
   git add templates/
-  git commit -m "$MSG" -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" >/dev/null
+  if [ -n "$CO_AUTHOR" ]; then
+    git commit -m "$MSG" -m "Co-Authored-By: $CO_AUTHOR" >/dev/null
+  else
+    git commit -m "$MSG" >/dev/null
+  fi
   echo "✓ 源仓库 commit: $(git log --oneline -1)"
 fi
 SRC_SHA=$(git rev-parse --short HEAD)
@@ -114,9 +121,14 @@ PY
 
 cd "$MP_REPO"
 git add plugins/harness-kit/
-git commit -m "harness-kit $NEW_VER: $MSG" \
-  -m "同步自 harness-kit@$SRC_SHA(scripts/release.sh)" \
-  -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" >/dev/null
+if [ -n "$CO_AUTHOR" ]; then
+  git commit -m "harness-kit $NEW_VER: $MSG" \
+    -m "同步自 harness-kit@$SRC_SHA(scripts/release.sh)" \
+    -m "Co-Authored-By: $CO_AUTHOR" >/dev/null
+else
+  git commit -m "harness-kit $NEW_VER: $MSG" \
+    -m "同步自 harness-kit@$SRC_SHA(scripts/release.sh)" >/dev/null
+fi
 echo "✓ 市场仓库 commit: $(git log --oneline -1)"
 
 # ── push 双仓库 ───────────────────────────────────────────────────────────────
