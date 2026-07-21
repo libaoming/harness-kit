@@ -97,6 +97,7 @@ harness-kit/
 │   ├── M1_AGENTS.md           # L2：里程碑工作约定
 │   ├── M1_PROGRESS.md         # L2：里程碑进度 + 增量流水
 │   ├── fixtures_README.md     # L2：fixture 索引
+│   ├── record-evidence.sh     # L2：verify 影像凭据录制器 — UI 类 verify 用 agent-browser 录视频/GIF
 │   ├── agent_ops.md           # L4：项目专属只读运维子 agent
 │   ├── settings.local.json    # L3：Stop hook 配置（注册下面这对 hook）
 │   └── hooks/

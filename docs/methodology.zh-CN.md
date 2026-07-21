@@ -32,6 +32,7 @@ harness 的本质，是把原本「靠人记得、靠模型记得」的东西，
   - status 四态 `pending → in_progress → failing → passing`。
   - **默认 failing，verify 真跑通才能改 passing**。单测过只到 `in_progress`，真实端到端 verify 过才 `passing`。
 - 🚦 **verifier 硬闸门**：`verify` 字段为空 = **不准开工**（不能离开 pending）。每个目标必须带可衡量的成功信号（fixture / 测试 / 基准 / 可复现 bug / E2E）——没有验证机制的目标只是许愿。
+- 🎥 **影像凭据（可选，UI / 交互类 verify）**：涉及界面、交互流程、跨页状态的 verify，除 exit code 外再留一段实跑录像——`./record-evidence.sh start <feature-id> <url>` 开录、跑完交互后 `stop --gif` 落档，路径填进 `verify.evidence`。exit code 只证明「代码路径跑完了」，证明不了「用户看到的对不对」；录像让 verify 结论不用重跑就能被第三方复核。纯 CLI / 数据类 verify 不要求。
 - 🧭 **三段式关联**：每个 feature 填 `related / affected / out_of_scope`，让子 agent 秒判「读哪些、不读哪些」，对治 context 膨胀；`out_of_scope` 同时防 AI 联调时复刻隐性功能。
 - **线性切片**：把功能排成有先后、各有 `exit_criteria` + `git_tag` 的几个阶段，完成一个才进下一个。
 - **fixture 先于代码**：verify 引用的 fixture 不存在就先造，不许 mock、不许「等真数据」。设计「一份 fixture 养多条功能」的复用结构。

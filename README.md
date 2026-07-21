@@ -97,6 +97,7 @@ harness-kit/
 │   ├── M1_AGENTS.md           # L2: milestone working conventions
 │   ├── M1_PROGRESS.md         # L2: milestone progress + incremental log
 │   ├── fixtures_README.md     # L2: fixture index
+│   ├── record-evidence.sh     # L2: verify evidence recorder — agent-browser video/GIF for UI verifies
 │   ├── agent_ops.md           # L4: project-specific read-only ops subagent
 │   ├── settings.local.json    # L3: Stop hook config (registers the pair below)
 │   └── hooks/
